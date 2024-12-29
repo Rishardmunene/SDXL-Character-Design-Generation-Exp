@@ -1,6 +1,48 @@
+from typing import Optional, Dict, Any
+import logging
+from pathlib import Path
+import torch
+from models.character_generator import CharacterGenerator
+from data.dataset_handler import DatasetHandler
+from utils.config_manager import ConfigManager
+from utils.visualization import visualize_generations
+from utils.logger import setup_logger
+
 def main():
-    print("Initializing SDXL Character Design Generation...")
-    # Here you would typically initialize your models, load data, and start the generation process.
+    # Setup logging
+    setup_logger()
+    logger = logging.getLogger(__name__)
+    
+    # Initialize configuration
+    config = ConfigManager("config/config.yaml")
+    
+    # Initialize model
+    generator = CharacterGenerator(
+        model_path=config.get("model_path"),
+        device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    )
+    
+    # Initialize dataset handler
+    dataset_handler = DatasetHandler(
+        data_dir=config.get("data_dir"),
+        cache_dir=config.get("cache_dir")
+    )
+    
+    try:
+        # Generate character
+        character = generator.generate(
+            prompt=config.get("prompt"),
+            negative_prompt=config.get("negative_prompt"),
+            num_inference_steps=config.get("num_inference_steps", 50),
+            guidance_scale=config.get("guidance_scale", 7.5)
+        )
+        
+        # Visualize and save results
+        visualize_generations(character, save_path=Path("outputs"))
+        
+    except Exception as e:
+        logger.error(f"Error during generation: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main()
