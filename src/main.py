@@ -5,7 +5,7 @@ import torch
 from models.character_generator import CharacterGenerator
 from models.controlnet_handler import ControlNetHandler
 from data.dataset_handler import DatasetHandler
-from utils.config_manager import ConfigManager
+from utils.config_manager import ConfigManager  # Ensure this is correctly implemented
 from utils.visualization import visualize_generations
 from utils.logger import setup_logger
 
@@ -15,7 +15,7 @@ def main():
     logger = logging.getLogger(__name__)
     
     # Initialize configuration
-    config = ConfigManager("config/config.yaml")
+    config = ConfigManager("config/config.yaml")  # Ensure the path is correct
     
     # Initialize model
     generator = CharacterGenerator(
