@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 import torch
 from models.character_generator import CharacterGenerator
+from models.controlnet_handler import ControlNetHandler
 from data.dataset_handler import DatasetHandler
 from utils.config_manager import ConfigManager
 from utils.visualization import visualize_generations
@@ -22,6 +23,9 @@ def main():
         device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     )
     
+    # Initialize ControlNet handler
+    controlnet_handler = ControlNetHandler(controlnet_model=config.get("controlnet_model"))
+    
     # Initialize dataset handler
     dataset_handler = DatasetHandler(
         data_dir=config.get("data_dir"),
@@ -36,6 +40,11 @@ def main():
             num_inference_steps=config.get("num_inference_steps", 50),
             guidance_scale=config.get("guidance_scale", 7.5)
         )
+        
+        # Process with ControlNet if needed
+        control_mode = config.get("control_mode")
+        if control_mode:
+            character = controlnet_handler.process_condition(character, control_mode)
         
         # Visualize and save results
         visualize_generations(character, save_path=Path("outputs"))

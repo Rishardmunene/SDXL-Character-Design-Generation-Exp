@@ -1,0 +1,9 @@
+model_path: "src/models/character_generator.py"  # Path to your character generator model
+controlnet_model: "src/models/controlnet_handler.py"  # Path to your ControlNet model
+control_mode: "sketch"  # Example control mode
+data_dir: "src/data"  # Path to your data directory
+cache_dir: "src/data/cache"  # Path to your cache directory
+prompt: "A futuristic warrior with glowing armor and a cybernetic arm" 
+negative_prompt: "blurry, low resolution, distorted"  
+num_inference_steps: 50
+guidance_scale: 7.5
