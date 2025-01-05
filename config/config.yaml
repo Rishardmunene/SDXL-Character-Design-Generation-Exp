@@ -1,10 +1,10 @@
-model_path: "src/models/character_generator.py"  # Local path to model weights
-vae_path: "src/models/lora_handler.py"  # Local path to VAE weights
-controlnet_model: "src/models/controlnet_handler.py"  # Path to ControlNet model
-control_mode: "sketch"  # control mode
-data_dir: "src/data"  # Path to data directory
-cache_dir: "src/data/cache"  # Path to cache directory
-prompt: "A futuristic warrior with glowing armor and a cybernetic arm" 
-negative_prompt: "blurry, low resolution, distorted"  
+model_path: "stabilityai/stable-diffusion-xl-base-1.0"
+vae_path: "madebyollin/sdxl-vae-fp16-fix"
+controlnet_model: "lllyasviel/sd-controlnet-scribble"
+control_mode: "sketch"
+data_dir: "src/data"
+cache_dir: "src/data/cache"
+prompt: "A futuristic warrior with glowing armor and a cybernetic arm"
+negative_prompt: "blurry, low resolution, distorted"
 num_inference_steps: 50
 guidance_scale: 7.5
