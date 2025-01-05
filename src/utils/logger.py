@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 def setup_logger(
     log_file: Optional[str] = "logs/generation.log",
