@@ -17,7 +17,8 @@ def main():
     logger = logging.getLogger(__name__)
     
     # Initialize configuration
-    config = ConfigManager("config/config.yaml") 
+    config_path = Path(__file__).resolve().parent.parent / "config/config.yaml"
+    config = ConfigManager(config_path) 
     
     # Initialize model
     generator = CharacterGenerator(
