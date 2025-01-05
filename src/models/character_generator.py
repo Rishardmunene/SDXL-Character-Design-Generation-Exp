@@ -1,23 +1,22 @@
 from diffusers import StableDiffusionXLPipeline, AutoencoderKL
 import torch
-from typing import Optional, List, Union, Dict
-from pathlib import Path
+from typing import Optional, List, Union
 import numpy as np
 
 class CharacterGenerator:
     def __init__(
         self,
         model_path: str,
+        vae_path: Optional[str],
         device: torch.device,
-        vae: Optional[AutoencoderKL] = None,
         enable_memory_optimization: bool = True
     ):
         self.device = device
-        self.pipeline = self._initialize_pipeline(model_path, vae)
+        self.pipeline = self._initialize_pipeline(model_path, vae_path)
         if enable_memory_optimization:
             self._optimize_memory_usage()
     
-    def _initialize_pipeline(self, model_path: str, vae: Optional[AutoencoderKL]) -> StableDiffusionXLPipeline:
+    def _initialize_pipeline(self, model_path: str, vae_path: Optional[str]) -> StableDiffusionXLPipeline:
         # Initialize the pipeline with the pre-trained model
         pipeline = StableDiffusionXLPipeline.from_pretrained(
             model_path,
@@ -25,7 +24,8 @@ class CharacterGenerator:
             use_safetensors=True,
             variant="fp16" if self.device.type == "cuda" else None
         )
-        if vae:
+        if vae_path:
+            vae = AutoencoderKL.from_pretrained(vae_path)
             pipeline.vae = vae
         pipeline.to(self.device)
         return pipeline

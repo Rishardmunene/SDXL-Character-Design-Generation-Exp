@@ -1,4 +1,5 @@
-model_path: "src/models/character_generator.py"  # Path to character generator model
+model_path: "src/models/character_generator.py"  # Local path to model weights
+vae_path: "src/models/lora_handler.py"  # Local path to VAE weights
 controlnet_model: "src/models/controlnet_handler.py"  # Path to ControlNet model
 control_mode: "sketch"  # control mode
 data_dir: "src/data"  # Path to data directory

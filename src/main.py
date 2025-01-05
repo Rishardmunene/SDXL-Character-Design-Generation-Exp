@@ -23,6 +23,7 @@ def main():
     # Initialize model
     generator = CharacterGenerator(
         model_path=config.get("model_path"),
+        vae_path=config.get("vae_path"),
         device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     )
     
