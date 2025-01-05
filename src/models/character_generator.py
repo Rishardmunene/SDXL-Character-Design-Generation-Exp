@@ -1,4 +1,3 @@
-# models/character_generator.py
 from diffusers import StableDiffusionXLPipeline, AutoencoderKL
 import torch
 from typing import Optional, List, Union, Dict
@@ -19,6 +18,7 @@ class CharacterGenerator:
             self._optimize_memory_usage()
     
     def _initialize_pipeline(self, model_path: str, vae: Optional[AutoencoderKL]) -> StableDiffusionXLPipeline:
+        # Initialize the pipeline with the pre-trained model
         pipeline = StableDiffusionXLPipeline.from_pretrained(
             model_path,
             torch_dtype=torch.float16 if self.device.type == "cuda" else torch.float32,
@@ -31,6 +31,7 @@ class CharacterGenerator:
         return pipeline
     
     def _optimize_memory_usage(self):
+        # Enable memory optimization techniques
         self.pipeline.enable_attention_slicing()
         if self.device.type == "cuda":
             torch.cuda.empty_cache()
@@ -45,12 +46,14 @@ class CharacterGenerator:
         seed: Optional[int] = None,
         callback: Optional[callable] = None
     ) -> List[np.ndarray]:
+        # Set the random seed for reproducibility
         if seed is not None:
             generator = torch.Generator(device=self.device).manual_seed(seed)
         else:
             generator = None
             
         with torch.inference_mode():
+            # Generate images using the pipeline
             images = self.pipeline(
                 prompt=prompt,
                 negative_prompt=negative_prompt,
