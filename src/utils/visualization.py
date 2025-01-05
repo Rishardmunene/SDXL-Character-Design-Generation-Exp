@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import List, Union
 import numpy as np
+from typing import Optional
 
 def visualize_generations(
     images: Union[np.ndarray, List[np.ndarray]],
