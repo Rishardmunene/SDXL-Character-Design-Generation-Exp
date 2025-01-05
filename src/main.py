@@ -1,8 +1,8 @@
-from typing import Optional, Dict, Any
+from typing import Optional
 import logging
 import sys
-sys.path.append(str(Path(__file__).resolve().parent))
 from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent))
 import torch
 from models.character_generator import CharacterGenerator
 from models.controlnet_handler import ControlNetHandler
