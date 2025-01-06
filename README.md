@@ -6,14 +6,24 @@ The SDXL Character Design Generation project is an experimental application aime
 ## Project Structure
 ```
 sdxl-character-design
+├── config
+│   ├──config.yaml       # Configuration file with models referenced 
 ├── src
 │   ├── main.py          # Entry point of the application
 │   ├── models           # Contains character model definitions
 │   │   └── __init__.py
+│   │   └── character_generator.py
+│   │   └── controlnet_handler.py
+│   │   └── lora_handler.py
 │   ├── data             # Handles data loading and preprocessing
 │   │   └── __init__.py
+│   │   └── dataset_handler.py
+│   │   └── preprocessor.py
 │   └── utils            # Utility functions for the application
 │       └── __init__.py
+│       └── config_manager.py
+│       └── logger.py
+│       └── visualisation.py 
 ├── requirements.txt     # Project dependencies
 ├── README.md            # Project documentation
 └── .gitignore           # Files to ignore in version control
