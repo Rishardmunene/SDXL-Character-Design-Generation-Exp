@@ -113,27 +113,36 @@ def main():
         
         # Generate character with error checking
         logger.info("Starting image generation...")
-        character = generator.generate(
-            prompt=config.get("prompt"),
-            negative_prompt=config.get("negative_prompt"),
-            num_inference_steps=config.get("num_inference_steps", 50),
-            guidance_scale=config.get("guidance_scale", 7.5)
-        )
+        try:
+            character = generator.generate(
+                prompt=config.get("prompt"),
+                negative_prompt=config.get("negative_prompt"),
+                num_inference_steps=config.get("num_inference_steps", 50),
+                guidance_scale=config.get("guidance_scale", 7.5)
+            )
+        except Exception as e:
+            logger.error(f"Generation failed: {str(e)}")
+            raise RuntimeError(f"Failed to generate image: {str(e)}")
         
         if character is None:
             raise RuntimeError("Image generation failed - no image was returned")
-            
+        
         # Process with ControlNet if needed
         control_mode = config.get("control_mode")
         if control_mode and character is not None:
-            character = controlnet_handler.process_condition(character, control_mode)
+            try:
+                character = controlnet_handler.process_condition(character, control_mode)
+            except Exception as e:
+                logger.error(f"ControlNet processing failed: {str(e)}")
+                # Continue with unprocessed character if ControlNet fails
         
-        # Only visualize if we have a valid image
+        # Visualize with error handling
         if character is not None:
             logger.info("Saving generated image...")
-            visualize_generations(character, save_path=Path("outputs"))
+            if not visualize_generations(character, save_path=Path("outputs")):
+                logger.error("Failed to save visualization")
         else:
-            logger.error("No image to visualize")
+            raise RuntimeError("No valid image to visualize")
             
     except Exception as e:
         logger.error(f"Error during generation: {str(e)}")
