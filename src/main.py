@@ -47,22 +47,70 @@ class ResourceMonitor:
                 raise RuntimeError(f"Resource limits exceeded: Memory: {memory_percent}%, GPU: {gpu_percent}%")
             
             time.sleep(1)  # Check every second
+    def wait_for_memory_clearance(self, timeout=60):
+        """Wait for memory to clear below threshold"""
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            memory_percent = psutil.virtual_memory().percent
+            gpu_percent = 0
+            if torch.cuda.is_available():
+                gpu_devices = GPUtil.getGPUs()
+                if gpu_devices:
+                    gpu_percent = gpu_devices[0].memoryUtil * 100
+            
+            if memory_percent < self.memory_threshold and gpu_percent < self.gpu_threshold:
+                return True
+            
+            # Force garbage collection
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+            
+            time.sleep(2)
+        return False
 
 def main():
     # Setup logging
     setup_logger()
     logger = logging.getLogger(__name__)
     
-    # Initialize configuration
+    # Initialize configuration and resource monitor first
     config_path = Path(__file__).resolve().parent.parent / "config/config.yaml"
-    config = ConfigManager(config_path) 
+    config = ConfigManager(config_path)
     
-    # Initialize model
-    generator = CharacterGenerator(
-        model_path=config.get("model_path"),
-        vae_path=config.get("vae_path"),
-        device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    resource_monitor = ResourceMonitor(
+        memory_threshold=config.get("memory_threshold", 85),
+        gpu_threshold=config.get("gpu_threshold", 85)
     )
+    
+    # Start monitoring and wait for initial memory clearance
+    resource_monitor.start_monitoring()
+    
+    try:
+        # Initialize models with memory checks
+        logger.info("Preparing to load models...")
+        if not resource_monitor.wait_for_memory_clearance():
+            raise RuntimeError("Could not achieve safe memory levels before model loading")
+        
+        # Load models in sequence with memory checks between each
+        generator = CharacterGenerator(
+            model_path=config.get("model_path"),
+            vae_path=config.get("vae_path"),
+            device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        )
+        
+        if not resource_monitor.wait_for_memory_clearance():
+            raise RuntimeError("Memory threshold exceeded after loading CharacterGenerator")
+            
+        controlnet_handler = ControlNetHandler(controlnet_model=config.get("controlnet_model"))
+        
+        if not resource_monitor.wait_for_memory_clearance():
+            raise RuntimeError("Memory threshold exceeded after loading ControlNet")
+            
+        dataset_handler = DatasetHandler(
+            data_dir=config.get("data_dir"),
+            cache_dir=config.get("cache_dir")
+        )
     
     # Initialize ControlNet handler
     controlnet_handler = ControlNetHandler(controlnet_model=config.get("controlnet_model"))
