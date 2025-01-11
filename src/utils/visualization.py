@@ -5,6 +5,7 @@ from typing import Union, List, Optional
 import numpy as np
 import logging
 
+# Initialize logger
 logger = logging.getLogger(__name__)
 
 def save_single_image(image: Image.Image, save_path: Path, index: int = 1) -> bool:

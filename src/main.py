@@ -16,13 +16,17 @@ from threading import Thread
 import time
 from PIL import Image
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 class ResourceMonitor:
     def __init__(self, memory_threshold=90, gpu_threshold=90):
+        logger.info(f"Initializing ResourceMonitor with thresholds: memory={memory_threshold}%, gpu={gpu_threshold}%")
         self.memory_threshold = memory_threshold
         self.gpu_threshold = gpu_threshold
         self.should_stop = False
         self.monitoring_thread = None
-        self.is_loading = False  # New flag to track loading state
+        self.is_loading = False
 
     def start_monitoring(self):
         self.monitoring_thread = Thread(target=self._monitor_resources, daemon=True)
@@ -34,6 +38,7 @@ class ResourceMonitor:
             self.monitoring_thread.join()
 
     def _monitor_resources(self):
+        logger.debug("Starting resource monitoring")
         while not self.should_stop:
             # Check CPU memory usage
             memory_percent = psutil.virtual_memory().percent
@@ -77,9 +82,9 @@ class ResourceMonitor:
         self.is_loading = is_loading
 
 def main():
-    # Setup logging
+    # Setup logging first
     setup_logger()
-    logger = logging.getLogger(__name__)
+    logger.info("Starting main application")
     
     # Initialize configuration and resource monitor first
     config_path = Path(__file__).resolve().parent.parent / "config/config.yaml"

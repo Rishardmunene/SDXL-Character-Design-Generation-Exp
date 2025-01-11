@@ -3,11 +3,14 @@ import json
 from typing import Dict, List, Optional
 import logging
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 class DatasetHandler:
     def __init__(self, data_dir: Path, cache_dir: Optional[Path] = None):
+        logger.info(f"Initializing DatasetHandler with data_dir: {data_dir}, cache_dir: {cache_dir}")
         self.data_dir = Path(data_dir)
         self.cache_dir = Path(cache_dir) if cache_dir else self.data_dir / "cache"
-        self.logger = logging.getLogger(__name__)
         
         self._create_directories()
         
@@ -21,7 +24,7 @@ class DatasetHandler:
             with open(template_path, 'r') as f:
                 return json.load(f)
         except FileNotFoundError:
-            self.logger.warning(f"No prompt templates found at {template_path}")
+            logger.warning(f"No prompt templates found at {template_path}")
             return {}
             
     def save_generation(self, image, metadata: Dict, prefix: str = "generation"):

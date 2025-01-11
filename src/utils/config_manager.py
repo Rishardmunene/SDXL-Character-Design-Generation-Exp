@@ -1,10 +1,15 @@
+import logging
 import yaml
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 class ConfigManager:
-    def __init__(self, config_path: str):
-        self.config_path = Path(config_path)
+    def __init__(self, config_path: Path):
+        logger.info(f"Loading configuration from {config_path}")
+        self.config_path = config_path
         self.config = self._load_config()
         
     def _load_config(self) -> Dict[str, Any]:
