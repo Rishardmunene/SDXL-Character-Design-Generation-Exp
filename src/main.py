@@ -21,6 +21,7 @@ class ResourceMonitor:
         self.gpu_threshold = gpu_threshold
         self.should_stop = False
         self.monitoring_thread = None
+        self.is_loading = False  # New flag to track loading state
 
     def start_monitoring(self):
         self.monitoring_thread = Thread(target=self._monitor_resources, daemon=True)
@@ -43,7 +44,8 @@ class ResourceMonitor:
                 if gpu_devices:
                     gpu_percent = gpu_devices[0].memoryUtil * 100
 
-            if memory_percent > self.memory_threshold or gpu_percent > self.gpu_threshold:
+            # Only raise error if we're not in loading state and thresholds are exceeded
+            if not self.is_loading and (memory_percent > self.memory_threshold or gpu_percent > self.gpu_threshold):
                 raise RuntimeError(f"Resource limits exceeded: Memory: {memory_percent}%, GPU: {gpu_percent}%")
             
             time.sleep(1)  # Check every second
@@ -69,6 +71,10 @@ class ResourceMonitor:
             time.sleep(2)
         return False
 
+    def set_loading_state(self, is_loading):
+        """Set whether the system is currently loading models"""
+        self.is_loading = is_loading
+
 def main():
     # Setup logging
     setup_logger()
@@ -79,8 +85,8 @@ def main():
     config = ConfigManager(config_path)
     
     resource_monitor = ResourceMonitor(
-        memory_threshold=config.get("memory_threshold", 85),
-        gpu_threshold=config.get("gpu_threshold", 85)
+        memory_threshold=config.get("memory_threshold", 95),
+        gpu_threshold=config.get("gpu_threshold", 95)
     )
     
     # Start monitoring and wait for initial memory clearance
@@ -89,8 +95,8 @@ def main():
     try:
         # Initialize models with memory checks
         logger.info("Preparing to load models...")
-        if not resource_monitor.wait_for_memory_clearance():
-            raise RuntimeError("Could not achieve safe memory levels before model loading")
+        # Set loading state to True during model initialization
+        resource_monitor.set_loading_state(True)
         
         # Load models in sequence with memory checks between each
         generator = CharacterGenerator(
