@@ -6,11 +6,12 @@ import numpy as np
 class CharacterGenerator:
     def __init__(self, model_path: str, vae_path: Optional[str] = None, device: Optional[torch.device] = None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         
-        # Initialize the pipeline without safety checker
+        # Initialize the pipeline
         self.pipeline = StableDiffusionXLPipeline.from_pretrained(
             model_path,
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            torch_dtype=self.dtype,
             variant="fp16" if torch.cuda.is_available() else None,
             use_safetensors=True
         )
@@ -19,7 +20,7 @@ class CharacterGenerator:
         if vae_path:
             vae = AutoencoderKL.from_pretrained(
                 vae_path,
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+                torch_dtype=self.dtype
             )
             self.pipeline.vae = vae
         
@@ -42,8 +43,8 @@ class CharacterGenerator:
         Returns:
             PIL.Image: The generated image
         """
-        # Ensure we're using float32 for the VAE
-        self.pipeline.vae.to(dtype=torch.float32)
+        # Ensure consistent dtype across the pipeline
+        self.pipeline.to(dtype=self.dtype)
         
         # Generate the image
         images = self.pipeline(
