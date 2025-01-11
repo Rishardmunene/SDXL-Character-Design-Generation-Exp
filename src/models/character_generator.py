@@ -3,6 +3,10 @@ import torch
 from typing import Optional, List, Union
 import numpy as np
 from PIL import Image
+import logging
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 class CharacterGenerator:
     def __init__(self, model_path: str, vae_path: Optional[str] = None, device: Optional[torch.device] = None):
