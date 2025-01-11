@@ -7,7 +7,7 @@ The SDXL Character Design Generation project is an experimental application aime
 ```
 sdxl-character-design
 ├── config
-│   ├──config.yaml       # Configuration file with models referenced 
+│   ├──config.yaml       # Configuration file with models
 ├── src
 │   ├── main.py          # Entry point of the application
 │   ├── models           # Contains character model definitions
