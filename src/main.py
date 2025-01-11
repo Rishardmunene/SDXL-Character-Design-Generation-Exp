@@ -14,6 +14,7 @@ import psutil
 import GPUtil
 from threading import Thread
 import time
+from PIL import Image
 
 class ResourceMonitor:
     def __init__(self, memory_threshold=90, gpu_threshold=90):
@@ -122,31 +123,34 @@ def main():
             )
         except Exception as e:
             logger.error(f"Generation failed: {str(e)}")
-            raise RuntimeError(f"Failed to generate image: {str(e)}")
-        
-        if character is None:
-            raise RuntimeError("Image generation failed - no image was returned")
-        
+            return False
+
+        # Verify character is a valid image
+        if not isinstance(character, Image.Image):
+            logger.error(f"Invalid image type returned: {type(character)}")
+            return False
+
         # Process with ControlNet if needed
         control_mode = config.get("control_mode")
-        if control_mode and character is not None:
+        if control_mode:
             try:
                 character = controlnet_handler.process_condition(character, control_mode)
             except Exception as e:
                 logger.error(f"ControlNet processing failed: {str(e)}")
-                # Continue with unprocessed character if ControlNet fails
-        
-        # Visualize with error handling
-        if character is not None:
-            logger.info("Saving generated image...")
-            if not visualize_generations(character, save_path=Path("outputs")):
-                logger.error("Failed to save visualization")
-        else:
-            raise RuntimeError("No valid image to visualize")
-            
+                # Continue with unprocessed character
+
+        # Save the generated image
+        output_path = Path("outputs")
+        if not visualize_generations(character, save_path=output_path):
+            logger.error("Failed to save generated image")
+            return False
+
+        logger.info("Generation process completed successfully")
+        return True
+
     except Exception as e:
         logger.error(f"Error during generation: {str(e)}")
-        raise
+        return False
     finally:
         resource_monitor.stop_monitoring()
 
