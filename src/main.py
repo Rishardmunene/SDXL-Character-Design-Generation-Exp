@@ -112,11 +112,19 @@ def main():
 
         resource_monitor.set_loading_state(False)
         
+        # Load configuration
+        prompt = config.get("prompt")
+        if not prompt:
+            logger.error("No prompt provided in configuration")
+            return False
+            
+        logger.info(f"Using prompt: {prompt}")
+        
         # Generate character with error checking
         logger.info("Starting image generation...")
         try:
             character = generator.generate(
-                prompt=config.get("prompt"),
+                prompt=prompt,
                 negative_prompt=config.get("negative_prompt"),
                 num_inference_steps=config.get("num_inference_steps", 50),
                 guidance_scale=config.get("guidance_scale", 7.5)
@@ -129,18 +137,12 @@ def main():
         if not isinstance(character, Image.Image):
             logger.error(f"Invalid image type returned: {type(character)}")
             return False
-
-        # Process with ControlNet if needed
-        control_mode = config.get("control_mode")
-        if control_mode:
-            try:
-                character = controlnet_handler.process_condition(character, control_mode)
-            except Exception as e:
-                logger.error(f"ControlNet processing failed: {str(e)}")
-                # Continue with unprocessed character
+            
+        logger.info("Image generated successfully")
 
         # Save the generated image
         output_path = Path("outputs")
+        logger.info(f"Attempting to save image to {output_path}")
         if not visualize_generations(character, save_path=output_path):
             logger.error("Failed to save generated image")
             return False

@@ -2,11 +2,14 @@ from diffusers import StableDiffusionXLPipeline, AutoencoderKL
 import torch
 from typing import Optional, List, Union
 import numpy as np
+from PIL import Image
 
 class CharacterGenerator:
     def __init__(self, model_path: str, vae_path: Optional[str] = None, device: Optional[torch.device] = None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        
+        logger.info(f"Initializing CharacterGenerator on {self.device} with {self.dtype}")
         
         # Initialize the pipeline
         self.pipeline = StableDiffusionXLPipeline.from_pretrained(
@@ -33,22 +36,13 @@ class CharacterGenerator:
     def generate(self, prompt, negative_prompt=None, num_inference_steps=50, guidance_scale=7.5):
         """
         Generate an image based on the given prompt.
-        
-        Args:
-            prompt (str): The input prompt for image generation
-            negative_prompt (str, optional): The negative prompt
-            num_inference_steps (int): Number of denoising steps
-            guidance_scale (float): Guidance scale for generation
-            
-        Returns:
-            PIL.Image: The generated image
-        
-        Raises:
-            RuntimeError: If image generation fails
         """
         try:
-            # Ensure consistent dtype across the pipeline
-            self.pipeline.to(dtype=self.dtype)
+            logger.info(f"Generating image with prompt: {prompt}")
+            
+            # Validate inputs
+            if not prompt:
+                raise ValueError("Prompt cannot be empty")
             
             # Generate the image
             result = self.pipeline(
@@ -58,10 +52,18 @@ class CharacterGenerator:
                 guidance_scale=guidance_scale,
             )
             
-            if not result.images or len(result.images) == 0:
-                raise RuntimeError("No images were generated")
-                
-            return result.images[0]  # Return the first generated image
+            # Validate the output
+            if not hasattr(result, 'images') or not result.images:
+                raise RuntimeError("Pipeline did not return any images")
+            
+            generated_image = result.images[0]
+            
+            # Verify the image
+            if not isinstance(generated_image, Image.Image):
+                raise TypeError(f"Expected PIL.Image but got {type(generated_image)}")
+            
+            logger.info("Image generation successful")
+            return generated_image
             
         except Exception as e:
             logger.error(f"Image generation failed: {str(e)}")
