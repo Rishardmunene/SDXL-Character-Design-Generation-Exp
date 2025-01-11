@@ -111,24 +111,6 @@ def main():
             data_dir=config.get("data_dir"),
             cache_dir=config.get("cache_dir")
         )
-    
-    # Initialize ControlNet handler
-    controlnet_handler = ControlNetHandler(controlnet_model=config.get("controlnet_model"))
-    
-    # Initialize dataset handler
-    dataset_handler = DatasetHandler(
-        data_dir=config.get("data_dir"),
-        cache_dir=config.get("cache_dir")
-    )
-    
-    # Initialize resource monitor
-    resource_monitor = ResourceMonitor(
-        memory_threshold=config.get("memory_threshold", 90),
-        gpu_threshold=config.get("gpu_threshold", 90)
-    )
-    resource_monitor.start_monitoring()
-    
-    try:
         # Generate character
         character = generator.generate(
             prompt=config.get("prompt"),
@@ -148,7 +130,6 @@ def main():
     except Exception as e:
         logger.error(f"Error during generation: {str(e)}")
         raise
-
     finally:
         resource_monitor.stop_monitoring()
 
