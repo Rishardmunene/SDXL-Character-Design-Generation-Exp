@@ -42,16 +42,27 @@ class CharacterGenerator:
             
         Returns:
             PIL.Image: The generated image
+        
+        Raises:
+            RuntimeError: If image generation fails
         """
-        # Ensure consistent dtype across the pipeline
-        self.pipeline.to(dtype=self.dtype)
-        
-        # Generate the image
-        images = self.pipeline(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-        ).images
-        
-        return images[0]  # Return the first generated image
+        try:
+            # Ensure consistent dtype across the pipeline
+            self.pipeline.to(dtype=self.dtype)
+            
+            # Generate the image
+            result = self.pipeline(
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+            )
+            
+            if not result.images or len(result.images) == 0:
+                raise RuntimeError("No images were generated")
+                
+            return result.images[0]  # Return the first generated image
+            
+        except Exception as e:
+            logger.error(f"Image generation failed: {str(e)}")
+            raise RuntimeError(f"Failed to generate image: {str(e)}")

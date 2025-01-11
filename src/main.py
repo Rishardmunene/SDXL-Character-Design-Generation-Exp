@@ -93,31 +93,26 @@ def main():
     resource_monitor.start_monitoring()
     
     try:
-        # Initialize models with memory checks
         logger.info("Preparing to load models...")
-        # Set loading state to True during model initialization
         resource_monitor.set_loading_state(True)
         
-        # Load models in sequence with memory checks between each
         generator = CharacterGenerator(
             model_path=config.get("model_path"),
             vae_path=config.get("vae_path"),
             device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
         )
         
-        if not resource_monitor.wait_for_memory_clearance():
-            raise RuntimeError("Memory threshold exceeded after loading CharacterGenerator")
-            
         controlnet_handler = ControlNetHandler(controlnet_model=config.get("controlnet_model"))
         
-        if not resource_monitor.wait_for_memory_clearance():
-            raise RuntimeError("Memory threshold exceeded after loading ControlNet")
-            
         dataset_handler = DatasetHandler(
             data_dir=config.get("data_dir"),
             cache_dir=config.get("cache_dir")
         )
-        # Generate character
+
+        resource_monitor.set_loading_state(False)
+        
+        # Generate character with error checking
+        logger.info("Starting image generation...")
         character = generator.generate(
             prompt=config.get("prompt"),
             negative_prompt=config.get("negative_prompt"),
@@ -125,14 +120,21 @@ def main():
             guidance_scale=config.get("guidance_scale", 7.5)
         )
         
+        if character is None:
+            raise RuntimeError("Image generation failed - no image was returned")
+            
         # Process with ControlNet if needed
         control_mode = config.get("control_mode")
-        if control_mode:
+        if control_mode and character is not None:
             character = controlnet_handler.process_condition(character, control_mode)
         
-        # Visualize and save results
-        visualize_generations(character, save_path=Path("outputs"))
-        
+        # Only visualize if we have a valid image
+        if character is not None:
+            logger.info("Saving generated image...")
+            visualize_generations(character, save_path=Path("outputs"))
+        else:
+            logger.error("No image to visualize")
+            
     except Exception as e:
         logger.error(f"Error during generation: {str(e)}")
         raise
